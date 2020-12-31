@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    Layout = "";
+}
+@using FenixAlliance.ABS.Portal.Data.Features
+@model FeaturesViewModel
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portal Features</title>
+</head>
+<body>
+
+    <h1>Features</h1>
+
+    <b>Controllers:</b>
+    <div >
+        <ul>
+            @foreach (var item in Model.Controllers)
+            {
+                <li>@item.Name</li>
+            }
+        </ul>
+    </div>
+    <br />
+    <br />
+    <br />
+    <br />
+    <b>Tag Helpers:</b>
+    <div >
+        <ul>
+            @foreach (var item in Model.TagHelpers)
+            {
+                <li>@item.Name</li>
+            }
+        </ul>
+    </div>
+    <br />
+    <br />
+    <br />
+    <br />
+    <b>View Components:</b>
+    <div >
+        <ul>
+            @foreach (var item in Model.ViewComponents)
+            {
+                <li>@item.Name</li>
+            }
+        </ul>
+    </div>
+</body>
+</html>
+
