@@ -4,11 +4,6 @@
     <TargetFramework>net5.0</TargetFramework>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="FenixAlliance.ACS.Core" Version="1.0.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="2.2.0" />
-  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\FenixAlliance.ABP.API.GraphQl\FenixAlliance.ABP.API.GraphQl.Core\FenixAlliance.ABP.API.GraphQl.Core.csproj" />
