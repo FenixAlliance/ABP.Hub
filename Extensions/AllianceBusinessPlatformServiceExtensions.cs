@@ -2,14 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 using AspNetCoreRateLimit;
 using AutoMapper;
-using FenixAlliance.ABP.API.GraphQl;
-using FenixAlliance.ABP.i18n;
-using FenixAlliance.Andy.Controllers.Extensions;
 using FenixAlliance.ABM.Hub.Extensions;
-using FenixAlliance.HealthChecks;
+using FenixAlliance.ABP.API.GraphQl;
+using FenixAlliance.ABP.Hub.Plugins;
+using FenixAlliance.ABP.i18n;
+using FenixAlliance.ABS.Portal.Core.Plugins;
+using FenixAlliance.Andy.Controllers.Extensions;
+using FenixAlliance.Core.Plugins;
 using FenixAlliance.HealthChecks.Extensions;
 using FenixAlliance.Hubs;
 using FenixAlliance.Options;
@@ -19,8 +25,6 @@ using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using FenixAlliance.ABS.Portal.Core.Plugins;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,14 +41,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using reCAPTCHA.AspNetCore;
 using Serilog;
-using System.Text.Json;
-using FenixAlliance.Core.Plugins;
-using System.Linq;
-using System.IO.Compression;
-using System.Threading.Tasks;
-using FenixAlliance.ABS.Portal.Core.AppSettingHelpers;
-using System.Xml.Serialization;
-using FenixAlliance.ABP.Hub.Plugins;
 
 namespace FenixAlliance.ABP.API.REST
 {
@@ -148,7 +144,8 @@ namespace FenixAlliance.ABP.API.REST
                         // Adds Cookies Consent for GDPR Compliance
                         services.Configure<CookiePolicyOptions>(options =>
                         {
-                            // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                            // This lambda determines whether user consent for non-essential cookies is 
+                            // needed for a given request.
                             options.CheckConsentNeeded = context => true;
                             options.MinimumSameSitePolicy = Microsoft.AspNetCore.Http.SameSiteMode.None;
                         });
@@ -338,8 +335,8 @@ namespace FenixAlliance.ABP.API.REST
                         options.SupportedUICultures = supportedCultures;
                         options.RequestCultureProviders = new List<IRequestCultureProvider>
                         {
-                        new QueryStringRequestCultureProvider(),
-                        new CookieRequestCultureProvider()
+                            new QueryStringRequestCultureProvider(),
+                            new CookieRequestCultureProvider()
                         };
                     });
                 }
