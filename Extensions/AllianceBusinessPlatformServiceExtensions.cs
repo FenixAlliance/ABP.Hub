@@ -649,11 +649,24 @@ namespace FenixAlliance.ABP.API.REST
                             routes.MapRazorPages();
                         }
 
+                        if (Options?.Functionalities?.Blazor?.MapBlazorHub ?? false)
+                        {
+                            routes.MapBlazorHub();
+                        }
+
                         if (Options?.Functionalities?.Blazor.Enable ?? false)
                         {
                             foreach (var Page in Options?.Functionalities?.Blazor?.BlazorFallbackPages ?? new List<BlazorFallbackPage>())
                             {
-                                routes.MapFallbackToPage(Page.Pattern, Page.Page);
+                                // Using overloads
+                                if (String.IsNullOrEmpty(Page.Pattern))
+                                {
+                                    routes.MapFallbackToPage(Page.Page);
+                                }
+                                else
+                                {
+                                    routes.MapFallbackToPage(Page.Pattern, Page.Page);
+                                }
                             }
                         }
 
@@ -672,10 +685,6 @@ namespace FenixAlliance.ABP.API.REST
                             routes.MapControllerRoute(controllerRoute.Name, controllerRoute.Pattern);
                         }
 
-                        if (Options?.Functionalities?.Blazor?.MapBlazorHub ?? false)
-                        {
-                            routes.MapBlazorHub();
-                        }
                     });
                 }
                 catch (Exception ex)
