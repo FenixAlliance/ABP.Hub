@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 
-namespace FenixAlliance.ABS.Portal.Data.Features
+namespace FenixAlliance.ABP.Hub.Features
 {
     public class FeaturesViewModel
     {

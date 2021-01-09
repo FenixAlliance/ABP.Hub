@@ -1,12 +1,12 @@
 ﻿using System.Linq;
-using FenixAlliance.ABS.Portal.Data.Features;
+using FenixAlliance.ABP.Hub.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Razor.TagHelpers;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 
-namespace FenixAlliance.ABS.Portal.Controllers
+namespace FenixAlliance.ABP.Hub.Controllers
 {
     public class FeaturesController : Controller
     {

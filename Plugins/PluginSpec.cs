@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System;
-using System.Xml.Serialization;
-using System.Collections.Generic;
+﻿using System.Xml.Serialization;
 
 namespace FenixAlliance.ABP.Hub.Plugins
 {
-	[XmlRoot(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd", ElementName = "repository")]
+    [XmlRoot(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd", ElementName = "repository")]
 	public class Repository
 	{
 		[XmlAttribute(AttributeName = "type")]

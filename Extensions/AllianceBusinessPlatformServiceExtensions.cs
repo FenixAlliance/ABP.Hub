@@ -10,14 +10,11 @@ using System.Xml.Serialization;
 using AspNetCoreRateLimit;
 using AutoMapper;
 using FenixAlliance.ABM.Hub.Extensions;
-using FenixAlliance.ABP.API.GraphQl;
+using FenixAlliance.ABP.API.REST.Core.Extensions;
 using FenixAlliance.ABP.Hub.Plugins;
-using FenixAlliance.ABP.i18n;
-using FenixAlliance.ABS.Portal.Core.Plugins;
+using FenixAlliance.ABP.i18n.Resources;
+using FenixAlliance.ABP.SignalR;
 using FenixAlliance.Andy.Controllers.Extensions;
-using FenixAlliance.Core.Plugins;
-using FenixAlliance.HealthChecks.Extensions;
-using FenixAlliance.Hubs;
 using FenixAlliance.Options;
 using FenixAlliance.Passport.Core;
 using Microsoft.AspNetCore.Authentication;
@@ -42,7 +39,7 @@ using Newtonsoft.Json.Serialization;
 using reCAPTCHA.AspNetCore;
 using Serilog;
 
-namespace FenixAlliance.ABP.API.REST
+namespace FenixAlliance.ABP.Hub.Extensions
 {
 
     public static class AllianceBusinessPlatformServiceExtensions
@@ -616,7 +613,9 @@ namespace FenixAlliance.ABP.API.REST
             if ((Options?.Functionalities?.StatusCodePagesWithRedirects.Enable ?? false))
             {
                 if (!Environment.IsDevelopment())
+                {
                     app.UseStatusCodePagesWithRedirects("/Error/E{0}");
+                }
             }
 
             if ((Options?.Functionalities?.Endpoints.Enable ?? false))
@@ -710,8 +709,9 @@ namespace FenixAlliance.ABP.API.REST
             Console.WriteLine($"Trying to load plugins for entry assembly {entryAssembly.FullName} at path {ModulesFolder} ");
 
             if (!Directory.Exists(ModulesFolder))
+            {
                 Directory.CreateDirectory(ModulesFolder);
-
+            }
 
             await ExtractNugetPackages(Directory.GetFiles(ModulesFolder, "*.nupkg", SearchOption.AllDirectories).ToList());
 
@@ -731,7 +731,9 @@ namespace FenixAlliance.ABP.API.REST
             }
 
             if (apm is not null)
+            {
                 apm.FeatureProviders.Add(new ViewComponentFeatureProvider());
+            }
 
             ModulesManifest = PluginManager.GetModulesManifest();
 
@@ -837,7 +839,9 @@ namespace FenixAlliance.ABP.API.REST
                                 Plugins.AddRange(PluginLoadContext.InstantiatePlugin(managedAssembly));
 
                                 if(!PluginSettings.AssemblyPaths.Any(c=> c == assemblyLocation))
+                                {
                                     PluginSettings.AssemblyPaths.Add(assemblyLocation);
+                                }
 
                                 if (apm is not null)
                                 {

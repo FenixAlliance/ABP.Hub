@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using FenixAlliance.Options;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace FenixAlliance.ABS.Portal.Core.Plugins
+namespace FenixAlliance.ABP.Hub.Plugins
 {
     public interface IPlugin
     {

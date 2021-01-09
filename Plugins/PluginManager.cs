@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using FenixAlliance.ABP.Hub.Plugins;
-using FenixAlliance.Core.Plugins;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Newtonsoft.Json;
 
-namespace FenixAlliance.ABS.Portal.Core.Plugins
+namespace FenixAlliance.ABP.Hub.Plugins
 {
     public static class PluginManager
     {
@@ -53,7 +51,9 @@ namespace FenixAlliance.ABS.Portal.Core.Plugins
             }
 
             if(AdditionalAssemblies is not null || AdditionalAssemblies.Count is not 0)
+            {
                 AdditionalAssemblies.AddRange(additionalAssemblies);
+            }
 
 
             //foreach (var assembly in ApplicationPartAssemblies)
@@ -89,7 +89,9 @@ namespace FenixAlliance.ABS.Portal.Core.Plugins
             var ModulesFolder = Path.Join(rootPath, "Modules");
 
             if (!Directory.Exists(ModulesFolder))
+            {
                 Directory.CreateDirectory(ModulesFolder);
+            }
 
             if (!File.Exists(modulesManifestPath))
             {

@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using FenixAlliance.ABS.Portal.Core.Plugins;
 
-namespace FenixAlliance.Core.Plugins
+namespace FenixAlliance.ABP.Hub.Plugins
 {
     public class PluginLoadContext : AssemblyLoadContext
     {

@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
-using FenixAlliance.ABP.Hub.Plugins;
 using Newtonsoft.Json;
 
-namespace FenixAlliance.ABS.Portal.Core.AppSettingHelpers
+namespace FenixAlliance.ABP.Hub.Settings
 {
     public static class AppSettingsManager<T>
     {
