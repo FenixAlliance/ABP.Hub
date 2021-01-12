@@ -71,7 +71,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
             return AdditionalAssemblies;
         }
 
-        public static List<FenixAlliance.Options.Extension> GetModulesManifest()
+        public static List<ACL.Configuration.Types.ABP.Modular.Module> GetModulesManifest()
         {
             string rootPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             var modulesManifestPath = Path.Join(rootPath, "Modules", "manifest.json");
@@ -79,7 +79,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
             EnsureModulesManifestExists(modulesManifestPath);
 
             string Content = File.ReadAllText(modulesManifestPath);
-            return JsonConvert.DeserializeObject<List<FenixAlliance.Options.Extension>>(Content);
+            return JsonConvert.DeserializeObject<List<ACL.Configuration.Types.ABP.Modular.Module>>(Content);
 
         }
 
@@ -95,11 +95,11 @@ namespace FenixAlliance.ABP.Hub.Plugins
 
             if (!File.Exists(modulesManifestPath))
             {
-                File.WriteAllText(modulesManifestPath, JsonConvert.SerializeObject(new List<FenixAlliance.Options.Extension>()));
+                File.WriteAllText(modulesManifestPath, JsonConvert.SerializeObject(new List<ACL.Configuration.Types.ABP.Modular.Module>()));
             }
         }
 
-        public static List<FenixAlliance.Options.Extension> AddModuleToManifest(FenixAlliance.Options.Extension Extension)
+        public static List<ACL.Configuration.Types.ABP.Modular.Module> AddModuleToManifest(ACL.Configuration.Types.ABP.Modular.Module Extension)
         {
             string rootPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             var modulesManifestPath = Path.Join(rootPath, "Modules", "manifest.json");
@@ -119,7 +119,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
             return currentManifest;
         }
 
-        public static FenixAlliance.Options.Extension GetModuleSettings(string moduleName)
+        public static ACL.Configuration.Types.ABP.Modular.Module GetModuleSettings(string moduleName)
         {
             string rootPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             var modulesPath = Path.Combine(rootPath, "Modules");
@@ -129,7 +129,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
                 {
                     using (StreamReader r = new StreamReader(Path.Join(modulesPath, moduleName, moduleName + ".json")))
                     {
-                        return JsonConvert.DeserializeObject<FenixAlliance.Options.Extension>(r.ReadToEnd());
+                        return JsonConvert.DeserializeObject<ACL.Configuration.Types.ABP.Modular.Module>(r.ReadToEnd());
                     }
                 }
             }

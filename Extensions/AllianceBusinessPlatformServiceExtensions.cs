@@ -10,13 +10,16 @@ using System.Xml.Serialization;
 using AspNetCoreRateLimit;
 using AutoMapper;
 using FenixAlliance.ABM.Hub.Extensions;
+using FenixAlliance.ABP.API.GraphQl.Core.Extensions;
 using FenixAlliance.ABP.API.REST.Core.Extensions;
+using FenixAlliance.ABP.HealthChecks.Core.Extensions;
 using FenixAlliance.ABP.Hub.Plugins;
 using FenixAlliance.ABP.i18n.Resources;
 using FenixAlliance.ABP.SignalR;
-using FenixAlliance.Andy.Controllers.Extensions;
-using FenixAlliance.Options;
-using FenixAlliance.Passport.Core;
+using FenixAlliance.ACL.Configuration.Types;
+using FenixAlliance.ACL.Configuration.Types.ABS.SPAs;
+using FenixAlliance.ACS.Core.Extensions;
+using FenixAlliance.APS.Core.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -38,6 +41,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using reCAPTCHA.AspNetCore;
 using Serilog;
+using Directory = System.IO.Directory;
+using Package = FenixAlliance.ABP.Hub.Plugins.Package;
 
 namespace FenixAlliance.ABP.Hub.Extensions
 {
@@ -80,27 +85,27 @@ namespace FenixAlliance.ABP.Hub.Extensions
         /// <param name="Environment"></param>
         /// <param name="Options"></param>
         public static void AddAllianceBusinessPlatform(this IServiceCollection services, IConfiguration Configuration,
-            IHostEnvironment Environment, PlatformOptions Options)
+            IHostEnvironment Environment, SuiteOptions Options)
         {
             try
             {
-                services.AddSingleton<PlatformOptions>(Options);
+                services.AddSingleton<SuiteOptions>(Options);
 
                 #region Auth
 
-                if (Options?.Functionalities?.AlliancePassportServices?.Enable ?? false)
+                if (Options?.APS?.Enable ?? false)
                 {
                     // Adds Azure AD B2C Authentication
                     //services.AddAlliancePassportServices(Configuration, Environment, Options);
 
                     #region Auth
 
-                    if (Options.Functionalities.AlliancePassportServices.Enable)
+                    if (Options?.APS?.Enable ?? false)
                     {
 
-                        if (Options?.Functionalities?.AlliancePassportServices?.AzureAdb2C?.DefaultProvider ?? false)
+                        if (Options?.APS?.AzureADB2C?.DefaultProvider ?? false)
                         {
-                            if (!Options?.Functionalities?.AlliancePassportServices?.AzureAd.DefaultProvider ?? false)
+                            if (!Options?.APS?.AzureAd.DefaultProvider ?? false)
                             {
                                 // Adds Azure AD B2C Authentication
                                 services.AddAuthentication(o =>
@@ -110,7 +115,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                                 })
                                 .AddAzureAdB2C(options =>
                                     Configuration.Bind(
-                                        $"Functionalities:AlliancePassportServices:{Options.Functionalities.AlliancePassportServices.Provider}",
+                                        $"Functionalities:AlliancePassportServices:{Options?.APS?.Provider}",
                                         options))
                                 //.AddAzureADB2CBearer(options => Configuration.Bind("AzureAdB2C", options))
                                 //.AddCertificate();
@@ -120,13 +125,13 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             }
                         }
 
-                        if (Options?.Functionalities?.AlliancePassportServices?.AzureAd.DefaultProvider ?? false)
+                        if (Options?.APS?.AzureAd.DefaultProvider ?? false)
                         {
-                            if (!Options?.Functionalities?.AlliancePassportServices?.AzureAdb2C?.DefaultProvider ?? false)
+                            if (!Options?.APS?.AzureADB2C?.DefaultProvider ?? false)
                             {
                                 services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
                                     .AddAzureAD(options => Configuration.Bind(
-                                        $"Functionalities:AlliancePassportServices:{Options.Functionalities.AlliancePassportServices.Provider}",
+                                        $"Functionalities:AlliancePassportServices:{Options.APS?.Provider}",
                                         options)).AddCookie();
                             }
                         }
@@ -135,7 +140,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                     #endregion
 
                     #region GDPR
-                    if (Options.Functionalities.Gdpr.Enable)
+                    if (Options.ABP?.Privacy.Gdpr?.Enable ?? false)
                     {
 
                         // Adds Cookies Consent for GDPR Compliance
@@ -154,7 +159,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region Data
 
-                if (Options?.Functionalities?.AllianceBusinessModel?.Enable ?? false)
+                if (Options?.ABM?.Enable ?? false)
                 {
                     services.AddAllianceBusinessModelServices(Configuration, Environment, Options);
                 }
@@ -163,7 +168,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region REST
 
-                if (Options?.Functionalities?.RestApi?.Enable ?? false)
+                if (Options?.ABP?.Apis?.RestApi?.Enable ?? false)
                 {
                     services.AddRestApiService(Configuration, Environment, Options);
                 }
@@ -172,7 +177,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region ACS
 
-                if (Options?.Functionalities?.AllianceCognitiveServices?.Enable ?? false)
+                if (Options?.ACS?.Enable ?? false)
                 {
                     services.AddAndyCognitiveServices(Configuration, Environment, Options);
                 }
@@ -181,7 +186,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region CORS
 
-                if (Options?.Functionalities?.Cors?.Enable ?? false)
+                if (Options?.ABP?.Cors?.Enable ?? false)
                 {
                     // Add CORS Policies
                     services.AddCors(options =>
@@ -198,59 +203,59 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region HTTP
 
-                if (Options?.Functionalities?.Http?.Enable ?? false)
+                if (Options?.ABP?.Http?.Enable ?? false)
                 {
-                    if (Options?.Functionalities?.Http?.Enable ?? false)
+                    if (Options?.ABP?.Http?.Enable ?? false)
                     {
                         // Set Basepath to /wwwroot
                         services.AddSingleton<IFileProvider>(
                         new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")));
                     }
 
-                    if (Options?.Functionalities?.Http?.Hsts.Enable ?? false)
+                    if (Options?.ABP?.Http?.Hsts.Enable ?? false)
                     {
                         // Configure HSTS
                         services.Configure<HstsOptions>(options =>
                         {
-                            options.IncludeSubDomains = Options?.Functionalities?.Http?.Hsts?.IncludeSubDomains ?? false;
-                            options.MaxAge = TimeSpan.FromDays(Options?.Functionalities?.Http?.Hsts?.MaxAge ?? 365);
+                            options.IncludeSubDomains = Options?.ABP?.Http?.Hsts?.IncludeSubDomains ?? false;
+                            options.MaxAge = TimeSpan.FromDays(Options?.ABP?.Http?.Hsts?.MaxAge ?? 365);
                         });
                     }
 
-                    if (Options?.Functionalities?.Http?.KestrelServerOptions.Enable ?? true)
+                    if (Options?.ABP?.Http?.KestrelServerOptions.Enable ?? true)
                     {
                         // kestrel AllowSynchronousIO
                         services.Configure<KestrelServerOptions>(options =>
                         {
-                            options.AllowSynchronousIO = Options?.Functionalities?.Http?.KestrelServerOptions.AllowSynchronousIo ?? true;
+                            options.AllowSynchronousIO = Options?.ABP?.Http?.KestrelServerOptions.AllowKestrelSynchronousIO ?? true;
                         });
                     }
 
-                    if (Options?.Functionalities?.Http?.IisServerOptions.Enable ?? true)
+                    if (Options?.ABP?.Http?.IisServerOptions.Enable ?? true)
                     {
                         // IIS AllowSynchronousIO
-                        services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = Options?.Functionalities?.Http?.IisServerOptions.AllowSynchronousIo ?? true; });
+                        services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = Options?.ABP?.Http?.IisServerOptions.AllowIISSynchronousIO ?? true; });
                     }
 
-                    if (Options?.Functionalities?.Http?.SessionConfiguration.Enable ?? false)
+                    if (Options?.ABP?.Http?.SessionConfiguration.Enable ?? false)
                     {
                         // Set a short timeout for easy testing.
                         services.AddSession(options =>
                         {
-                            options.Cookie.HttpOnly = Options?.Functionalities?.Http?.SessionConfiguration.HttpOnlyCookie ?? true;
+                            options.Cookie.HttpOnly = Options?.ABP?.Http?.SessionConfiguration.HttpOnlyCookie ?? true;
                             if (Environment.IsDevelopment())
                             {
-                                options.IdleTimeout = TimeSpan.FromSeconds(Options?.Functionalities?.Http?.SessionConfiguration.DevIdleTimeout ?? 10);
+                                options.IdleTimeout = TimeSpan.FromSeconds(Options?.ABP?.Http?.SessionConfiguration.DevIdleTimeout ?? 10);
                             }
                             else
                             {
-                                options.IdleTimeout = TimeSpan.FromSeconds(Options?.Functionalities?.Http?.SessionConfiguration.IdleTimeout ?? 3600);
+                                options.IdleTimeout = TimeSpan.FromSeconds(Options?.ABP?.Http?.SessionConfiguration.IdleTimeout ?? 3600);
                             }
 
                         });
                     }
 
-                    if (Options?.Functionalities?.Http?.EnableContextAccessor ?? false)
+                    if (Options?.ABP?.Http?.EnableContextAccessor ?? false)
                     {
                         // Adds HTTP Context Accessor
                         services.AddHttpContextAccessor();
@@ -261,7 +266,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region GraphQL
 
-                if (Options?.Functionalities?.GraphQlApi?.Enable ?? false)
+                if (Options?.ABP?.Apis?.GraphQlApi?.Enable ?? false)
                 {
                     services.AddGraphQlApiService(Configuration, Environment, Options);
                 }
@@ -269,10 +274,12 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 #endregion
 
                 #region Caching
-                if (Options?.Functionalities?.ResponseCaching?.Enable ?? false)
+
+                if (Options?.ABP?.Caching?.Enable ?? false)
                 {
                     services.AddMemoryCache();
 
+                    // TODO: ADD Distributed Memory Cache Options
                     // Adds Distributed Memory Cache
                     services.AddDistributedMemoryCache();
 
@@ -283,23 +290,26 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         options.TableName = "ABSCache";
                     });
 
-                    services.AddResponseCaching();
+                    if (Options?.ABP?.Caching?.ResponseCaching?.Enable ?? false)
+                    {
+                        services.AddResponseCaching();
+                    }
                 }
 
                 #endregion
 
                 #region AppInsights
 
-                if (Options?.Functionalities?.ApplicationInsights?.Enable ?? false)
+                if (Options?.ABP?.Integrations?.Enable ?? false)
                 {
                     // Adds Azure App Insights Telemetry
-                    services.AddApplicationInsightsTelemetry();
+                    // services.AddApplicationInsightsTelemetry();
                 }
 
                 #endregion
 
                 #region APIRateLimit
-                if (Options?.Functionalities?.IpRateLimiting?.Enable ?? false)
+                if (Options?.ABP?.Apis?.IpRateLimiting?.Enable ?? false)
                 {
                     services.Configure<IpRateLimitOptions>(Configuration.GetSection("Functionalities:IpRateLimiting"));
                     services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
@@ -311,7 +321,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region HealthChecks
 
-                if (Options?.Functionalities?.HealthChecks?.Enable ?? false)
+                if (Options?.ABP?.HealthChecks?.Enable ?? false)
                 {
                     services.AddHealthChecksPlatform(Configuration, Environment, Options);
                 }
@@ -319,7 +329,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region Localization
 
-                if (Options?.Functionalities?.Localization?.Enable ?? false)
+                if (Options?.ABP?.Localization?.Enable ?? false)
                 {
                     // Adds localization to the App
                     services.AddLocalization();
@@ -342,17 +352,17 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region Recaptcha
 
-                if (Options?.Functionalities?.Recaptcha?.Enable ?? false)
+                if (Options?.ABP?.Integrations?.GoogleRecaptcha.Enable ?? false)
                 {
                     // Adds Google recaptcha initialization
-                    services.Configure<RecaptchaSettings>(Configuration.GetSection("Functionalities:Recaptcha"));
+                    services.Configure<RecaptchaSettings>(Configuration.GetSection("ABP:Integrations:GoogleRecaptcha"));
                     services.AddTransient<IRecaptchaService, RecaptchaService>();
                 }
 
                 #endregion
 
                 #region SignalR
-                if (Options?.Functionalities?.SignalR?.Enable ?? false)
+                if (Options?.ABP?.WebSockets?.Enable ?? false)
                 {
                     services.AddSignalR();
                 }
@@ -360,17 +370,12 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 #endregion
 
                 #region AutoMapper
-
-                if (Options?.Functionalities?.AutoMapper?.Enable ?? false)
-                {
-                    services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-                }
-
+                services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
                 #endregion
 
                 #region MVC
 
-                if (Options?.Functionalities?.Mvc?.Enable ?? false)
+                if (Options?.ABS?.ControllersWithViews?.Enable ?? false)
                 {
                     // Adds MVC Service
                     services.AddControllersWithViews(
@@ -397,7 +402,8 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
                             options.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.None;
                         })
-                        .ConfigureApplicationPartManager(async apm => {
+                        .ConfigureApplicationPartManager(async apm =>
+                        {
                             apm = await ConfigureApplicationParts(apm);
                         })
                         .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
@@ -410,7 +416,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #region Razor
 
-                if (Options?.Functionalities?.RazorPages?.Enable ?? false)
+                if (Options?.ABS?.RazorPages?.Enable ?? false)
                 {
                     // Adds Razor Pages
                     services.AddRazorPages()
@@ -439,7 +445,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 #endregion
 
                 #region Blazor
-                if (Options?.Functionalities?.Blazor?.Enable ?? false)
+                if (Options?.ABS?.Blazor?.Enable ?? false)
                 {
                     // Adds Server-Side Blazor
                     services.AddServerSideBlazor();
@@ -471,7 +477,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
         /// <param name="Environment"></param>
         /// <param name="Options"></param>
         public static void UseAllianceBusinessPlatform(this IApplicationBuilder app, IConfiguration Configuration,
-            IHostEnvironment Environment, PlatformOptions Options)
+            IHostEnvironment Environment, SuiteOptions Options)
         {
 
             // Enable Sensitive Exceptions on dev
@@ -494,7 +500,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 app.UseHsts();
             }
 
-            if (Options?.Functionalities?.Http?.Enable ?? false)
+            if (Options?.ABP?.Http?.Enable ?? false)
             {
 
                 // Pre-Routing Middleware
@@ -505,12 +511,12 @@ namespace FenixAlliance.ABP.Hub.Extensions
                     var host = context.Request.Host;
 
                     // Manage Headers
-                    foreach (var Header in Options?.Functionalities?.Http?.Headers)
+                    foreach (var Header in Options?.ABP?.Http?.Headers)
                     {
                         context.Response.Headers.Add(Header.Key, Header.Value);
                     }
 
-                    foreach (var Redirection in Options?.Functionalities?.Http?.Redirections)
+                    foreach (var Redirection in Options?.ABP?.Http?.Redirections)
                     {
                         // Redirect to an external URL
                         if (url.ToLower().Contains(Redirection?.Contains) && !url.ToLower().Contains(Redirection?.NotContains))
@@ -525,19 +531,19 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 });
             }
 
-            if (Options?.Functionalities?.RestApi?.Enable ?? false)
+            if (Options?.ABP?.Apis?.RestApi?.Enable ?? false)
             {
                 // Use REST API Service
                 app.UseRestApiService(Configuration, Environment, Options);
             }
 
-            if (Options?.Functionalities?.GraphQlApi?.Enable ?? false)
+            if (Options?.ABP?.Apis?.GraphQlApi?.Enable ?? false)
             {
                 // Use GraphQL API Service
                 app.UseGraphQlApiService(Configuration, Environment, Options);
             }
 
-            if (Options?.Functionalities?.Localization?.Enable ?? false)
+            if (Options?.ABP?.Localization?.Enable ?? false)
             {
                 // Use Localization
                 app.UseRequestLocalization(new RequestLocalizationOptions
@@ -552,65 +558,66 @@ namespace FenixAlliance.ABP.Hub.Extensions
             }
 
             // UseCors must be called before UseResponseCaching when using UseResponseCaching.
-            if (Options?.Functionalities?.Cors?.Enable ?? false)
+            if (Options?.ABP?.Cors?.Enable ?? false)
             {
                 app.UseCors(CorsPolicy);
             }
 
-            if (Options?.Functionalities?.Routing?.Enable ?? false)
+            if (Options?.ABP?.Routing?.Enable ?? false)
             {
                 app.UseRouting();
             }
 
-            if (Options?.Functionalities?.IpRateLimiting?.Enable ?? false)
+            if (Options?.ABP?.Apis?.IpRateLimiting?.Enable ?? false)
             {
                 app.UseIpRateLimiting();
             }
 
-            if (Options?.Functionalities?.ResponseCaching?.Enable ?? false)
+            if (Options?.ABP?.Caching?.Enable ?? false)
             {
-                app.UseResponseCaching();
+                if (Options?.ABP?.Caching?.ResponseCaching?.Enable ?? false)
+                    app.UseResponseCaching();
             }
 
-            if (Options?.Functionalities?.StaticFiles?.Enable ?? false)
+            if (Options?.ABP?.StaticFiles?.Enable ?? false)
             {
                 app.UseStaticFiles();
             }
 
-            if (Options?.Functionalities?.Logging?.Enable ?? false)
+            if (Options?.ABP?.Logging?.Enable ?? false)
             {
-                if (Options?.Functionalities?.Logging?.Serilog.Enable ?? false)
+                if (Options?.ABP?.Logging?.Serilog.Enable ?? false)
                 {
                     app.UseSerilogRequestLogging();
                 }
             }
 
-            if (Options?.Functionalities?.AlliancePassportServices?.Enable ?? false)
+            if (Options?.APS?.Enable ?? false)
             {
                 app.UseAlliancePassportServices(Configuration, Environment, Options);
             }
 
-            if (Options?.Functionalities?.CookiePolicy?.Enable ?? false)
+            if (Options?.ABP?.Privacy?.CookiePolicy?.Enable ?? true)
             {
                 app.UseCookiePolicy();
             }
 
-            if (Options?.Functionalities?.WebSockets?.Enable ?? false)
+            if (Options?.ABP?.WebSockets?.Enable ?? false)
             {
                 app.UseWebSockets();
             }
 
-            if (Options?.Functionalities?.HttpsRedirection?.Enable ?? false)
+            if (Options?.ABP?.Http?.HttpsRedirection?.Enable ?? false)
             {
                 app.UseHttpsRedirection();
             }
 
-            if ((Options?.Functionalities?.HealthChecks.Enable ?? false))
+            if ((Options?.ABP?.HealthChecks?.Enable ?? false))
             {
                 app.UseHealthChecksPlatform(Configuration, Environment, Options);
             }
 
-            if ((Options?.Functionalities?.StatusCodePagesWithRedirects.Enable ?? false))
+            if ((Options?.ABP?.Routing?.Redirections?.StatusCodePages?.Enable ?? false))
             {
                 if (!Environment.IsDevelopment())
                 {
@@ -618,24 +625,24 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 }
             }
 
-            if ((Options?.Functionalities?.Endpoints.Enable ?? false))
+            if ((Options?.ABS?.ControllersWithViews?.Endpoints?.Enable ?? false))
             {
                 try
                 {
                     app.UseEndpoints(routes =>
                     {
-                        if ((Options?.Functionalities?.HealthChecks.Enable ?? false))
+                        if ((Options?.ABP?.HealthChecks.Enable ?? false))
                         {
-                            if ((Options?.Functionalities?.HealthChecks?.MapHealthChecks ?? false))
+                            if ((Options?.ABP?.HealthChecks?.MapHealthChecks ?? false))
                             {
-                                routes.MapHealthChecks(Options?.Functionalities?.HealthChecks?.Endpoint ?? "/health");
+                                routes.MapHealthChecks(Options?.ABP?.HealthChecks?.Endpoint ?? "/health");
                             }
 
-                            if (Options?.Functionalities?.HealthChecks?.HealthChecksUi?.Enable ?? false)
+                            if (Options?.ABP?.HealthChecks?.HealthChecksUi?.Enable ?? false)
                             {
                                 routes.MapHealthChecksUI(setup =>
                                 {
-                                    foreach (var style in Options?.Functionalities?.HealthChecks?.HealthChecksUi?.Styles)
+                                    foreach (var style in Options?.ABP?.HealthChecks?.HealthChecksUi?.Styles)
                                     {
                                         setup.AddCustomStylesheet(style.Path);
                                     }
@@ -643,19 +650,22 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             }
                         }
 
-                        if (Options?.Functionalities?.Endpoints.MapRazorPages ?? false)
+                        if (Options?.ABS?.RazorPages?.Enable ?? false)
                         {
                             routes.MapRazorPages();
                         }
 
-                        if (Options?.Functionalities?.Blazor?.MapBlazorHub ?? false)
+                        if (Options?.ABS?.Blazor?.Enable ?? false)
                         {
+                            // if (Options?.ABS?.Blazor?.BlazorHub. ?? false)
+                            //{
                             routes.MapBlazorHub();
+                            //}
                         }
 
-                        if (Options?.Functionalities?.Blazor.Enable ?? false)
+                        if (Options?.ABS?.Blazor.Enable ?? false)
                         {
-                            foreach (var Page in Options?.Functionalities?.Blazor?.BlazorFallbackPages ?? new List<BlazorFallbackPage>())
+                            foreach (var Page in Options?.ABS?.Blazor?.BlazorFallbackPages ?? new List<BlazorFallbackPage>())
                             {
                                 // Using overloads
                                 if (String.IsNullOrEmpty(Page.Pattern))
@@ -669,17 +679,18 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             }
                         }
 
-                        if ((Options?.Functionalities?.Endpoints.MapChatHub ?? false))
+                        if ((Options?.ABP?.WebSockets?.Enable ?? false))
                         {
+                            // TODO: Add types based on typename
                             routes.MapHub<ChatHUB>("/ChatHUB");
                         }
 
-                        foreach (var area in Options?.Functionalities?.Endpoints?.AreaControllerRoutes)
+                        foreach (var area in Options?.ABS?.ControllersWithViews?.Endpoints?.AreaControllerRoutes)
                         {
                             routes.MapAreaControllerRoute(area.Name, area.AreaName, area.Pattern);
                         }
 
-                        foreach (var controllerRoute in Options?.Functionalities?.Endpoints?.ControllerRoutes)
+                        foreach (var controllerRoute in Options?.ABS?.ControllersWithViews?.Endpoints?.ControllerRoutes)
                         {
                             routes.MapControllerRoute(controllerRoute.Name, controllerRoute.Pattern);
                         }
@@ -745,7 +756,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
         /// </summary>
         /// <param name="path"></param>
         /// <param name="apm"></param>
-        public static async Task<ApplicationPartManager> ConfigureApplicationPart(string path, ApplicationPartManager apm = null, PlatformOptions Options = null)
+        public static async Task<ApplicationPartManager> ConfigureApplicationPart(string path, ApplicationPartManager apm = null, SuiteOptions Options = null)
         {
             if (Directory.Exists(path))
             {
@@ -777,7 +788,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                     var JsonFiles = assemblyFiles?.Where(c => c.ToLowerInvariant().EndsWith(".json"))?.ToList();
 
 
-                    var PluginSettings = new Extension()
+                    var PluginSettings = new ACL.Configuration.Types.ABP.Modular.Module()
                     {
                         AssemblyPaths = new List<string>()
                     };
@@ -833,14 +844,14 @@ namespace FenixAlliance.ABP.Hub.Extensions
                                 var assemblyIsDynamic = assembly.IsDynamic;
                                 var assemblyLocation = assembly.Location;
                                 var assemblyIsCollectible = assembly.IsCollectible;
-                                PluginSettings.AssemblyPaths.Add(assemblyLocation);
+                                PluginSettings.AssemblyPaths.ToList().Add(assemblyLocation);
 
 
                                 Plugins.AddRange(PluginLoadContext.InstantiatePlugin(managedAssembly));
 
-                                if(!PluginSettings.AssemblyPaths.Any(c=> c == assemblyLocation))
+                                if (!PluginSettings.AssemblyPaths.Any(c => c == assemblyLocation))
                                 {
-                                    PluginSettings.AssemblyPaths.Add(assemblyLocation);
+                                    PluginSettings.AssemblyPaths.ToList().Add(assemblyLocation);
                                 }
 
                                 if (apm is not null)

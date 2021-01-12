@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
-using FenixAlliance.Options;
+using FenixAlliance.ACL.Configuration.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -20,8 +20,8 @@ namespace FenixAlliance.ABP.Hub.Plugins
         [System.Text.Json.Serialization.JsonIgnore]
         IEnumerable<Assembly> Assemblies { get; }
 
-        int ConfigureServices(IConfiguration Configuration, IHostEnvironment Environment, PlatformOptions Options);
+        int ConfigureServices(IConfiguration Configuration, IHostEnvironment Environment, SuiteOptions Options);
 
-        int Configure(IConfiguration Configuration, IHostEnvironment Environment, PlatformOptions Options);
+        int Configure(IConfiguration Configuration, IHostEnvironment Environment, SuiteOptions Options);
     }
 }
