@@ -20,7 +20,7 @@
     <PackageProjectUrl>https://absuite.net</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Copyright>© 2009 - 2021 Fenix Alliance Inc. All rights reserved.</Copyright>
-    <PackageTags>Alliance Business Suite; Fenix Alliance, ABS, ABM; ABP; ACL; APS; ACS;</PackageTags>
+    <PackageTags>Alliance Business Suite; Fenix Alliance; ABS; ABM; ABP; ACL; APS; ACS;</PackageTags>
     <PackageIconUrl>https://fenixalliance.com.co/images/FenixAlliance/AppIcon/apple-icon-120x120.png</PackageIconUrl>
 
     <PackageReleaseNotes>Standarize at v1.1.1</PackageReleaseNotes>
@@ -36,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FenixAlliance.ABP.API.GraphQl\FenixAlliance.ABP.API.GraphQl.Core\FenixAlliance.ABP.API.GraphQl.Core.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.API.REST\FenixAlliance.ABP.API.REST.Core\FenixAlliance.ABP.API.REST.Core.csproj" />
+    <ProjectReference Include="..\FenixAlliance.ABP.BotEngine\FenixAlliance.ABP.BotEngine.Core\FenixAlliance.ABP.BotEngine.Core.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.HealthChecks\FenixAlliance.ABP.HealthChecks.Core\FenixAlliance.ABP.HealthChecks.Core.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.i18n\FenixAlliance.ABP.i18n.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.Nucleus\FenixAlliance.ABP.Nucleus.csproj" />
