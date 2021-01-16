@@ -1,8 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
-
+<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <Icon>Icon.png</Icon>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <language>en-US</language>
     <LangVersion>latest</LangVersion>
     <PackageIcon>Icon.png</PackageIcon>
@@ -19,20 +18,17 @@
     <DevelopmentDependency>false</DevelopmentDependency>
     <PackageProjectUrl>https://absuite.net</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Copyright>© 2009 - 2021 Fenix Alliance Inc. All rights reserved.</Copyright>
+    <Copyright>Â© 2009 - 2021 Fenix Alliance Inc. All rights reserved.</Copyright>
     <PackageTags>Alliance Business Suite; Fenix Alliance; ABS; ABM; ABP; ACL; APS; ACS;</PackageTags>
     <PackageIconUrl>https://fenixalliance.com.co/images/FenixAlliance/AppIcon/apple-icon-120x120.png</PackageIconUrl>
-
     <PackageReleaseNotes>Standarize at v1.1.1</PackageReleaseNotes>
     <Description>Application Component for the Alliance Business Suite.</Description>
     <RepositoryUrl>https://github.com/FenixAlliance/ABP.Hub</RepositoryUrl>
   </PropertyGroup>
-
   <ItemGroup>
     <None Include="Icon.png" Pack="True" PackagePath="" />
     <None Include="LICENSE.md" Pack="True" PackagePath="" />
   </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\FenixAlliance.ABP.API.GraphQl\FenixAlliance.ABP.API.GraphQl.Core\FenixAlliance.ABP.API.GraphQl.Core.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.API.REST\FenixAlliance.ABP.API.REST.Core\FenixAlliance.ABP.API.REST.Core.csproj" />
@@ -42,5 +38,4 @@
     <ProjectReference Include="..\FenixAlliance.ABP.Nucleus\FenixAlliance.ABP.Nucleus.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.SignalR\FenixAlliance.ABP.SignalR.csproj" />
   </ItemGroup>
-
 </Project>
