@@ -480,7 +480,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
         /// <param name="Environment"></param>
         /// <param name="Options"></param>
         public static void UseAllianceBusinessPlatform(this IApplicationBuilder app, IConfiguration Configuration,
-            IHostEnvironment Environment, SuiteOptions Options)
+            IHostEnvironment Environment, ISuiteOptions Options)
         {
 
             // Enable Sensitive Exceptions on dev
