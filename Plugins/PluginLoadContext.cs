@@ -1,19 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using FenixAlliance.ACL.Configuration.Interfaces;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace FenixAlliance.ABP.Hub.Plugins
 {
     public class PluginLoadContext : AssemblyLoadContext
     {
         private AssemblyDependencyResolver _resolver;
+        private IServiceCollection services;
+        private IConfiguration Configuration;
+        private IHostEnvironment Environment;
+        private ISuiteOptions Options;
 
         public PluginLoadContext(string pluginPath)
         {
             _resolver = new AssemblyDependencyResolver(pluginPath);
         }
+        
         /// <summary>
         /// Load Managed Assembly from AssemblyName
         /// </summary>
@@ -22,6 +29,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
         protected override Assembly Load(AssemblyName assemblyName)
         {
             string assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
+
             if (assemblyPath != null)
             {
                 return LoadFromAssemblyPath(assemblyPath);
@@ -56,42 +64,6 @@ namespace FenixAlliance.ABP.Hub.Plugins
             return IntPtr.Zero;
         }
 
-        protected  IntPtr LoadUnmanagedDllFromPath(string unmanagedDllPath)
-        {
-
-            if (unmanagedDllPath != null)
-            {
-                return LoadUnmanagedDllFromPath(unmanagedDllPath);
-            }
-
-            return IntPtr.Zero;
-        }
-
-        public static IEnumerable<IPlugin> InstantiatePlugin(Assembly assembly)
-        {
-            int count = 0;
-
-            foreach (Type type in assembly.GetTypes())
-            {
-                if (typeof(IPlugin).IsAssignableFrom(type))
-                {
-                    IPlugin result = Activator.CreateInstance(type) as IPlugin;
-                    if (result != null)
-                    {
-                        count++;
-                        yield return result;
-                    }
-                }
-            }
-
-            if (count == 0)
-            {
-                string availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
-
-                Console.WriteLine($"Can't find any type which implements IPlugin in {assembly}.");
-                //+ $"Available types: {availableTypes}");
-            }
-        }
 
     }
 }
