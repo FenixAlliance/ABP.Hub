@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace FenixAlliance.ABP.Hub.Plugins.Packages
+namespace FenixAlliance.ABP.Hub.Plugins.Specifications
 {
     [XmlRoot(Namespace = "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd", ElementName = "package")]
     public class Package
