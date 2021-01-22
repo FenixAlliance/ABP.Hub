@@ -2,11 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
 using AspNetCoreRateLimit;
 using AutoMapper;
 using FenixAlliance.ABM.Hub.Extensions;
@@ -18,7 +13,6 @@ using FenixAlliance.ABP.Hub.Plugins;
 using FenixAlliance.ABP.i18n.Resources;
 using FenixAlliance.ABP.SignalR;
 using FenixAlliance.ACL.Configuration.Interfaces;
-using FenixAlliance.ACL.Configuration.Types;
 using FenixAlliance.ACL.Configuration.Types.ABS.SPAs;
 using FenixAlliance.APS.Core.Extensions;
 using Microsoft.AspNetCore.Authentication;
@@ -29,10 +23,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,8 +34,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using reCAPTCHA.AspNetCore;
 using Serilog;
-using Directory = System.IO.Directory;
-using Package = FenixAlliance.ABP.Hub.Plugins.Package;
 
 namespace FenixAlliance.ABP.Hub.Extensions
 {
@@ -54,10 +44,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
         ///
         /// </summary>
         static string CorsPolicy = "AllowAllOrigins";
-        /// <summary>
-        /// Modules Folder
-        /// </summary>
-        static string ModulesFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location), "Modules");
 
         /// <summary>
         /// Supported Languages
@@ -67,12 +53,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
         /// <summary>
         /// 
         /// </summary>
-        static List<IPlugin> Plugins = new List<IPlugin>();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        static List<CultureInfo> supportedCultures = new List<CultureInfo>
+        private static readonly List<CultureInfo> supportedCultures = new List<CultureInfo>
         {
             new CultureInfo(DefaultCulture),
             new CultureInfo("es-CO"),
@@ -128,9 +109,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             if (!Options.APS?.AzureADB2C?.DefaultProvider ?? false)
                             {
                                 services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-                                    .AddAzureAD(options => Configuration.Bind(
-                                        $"APS:{Options.APS?.Provider}",
-                                        options))
+                                    .AddAzureAD(options => Configuration.Bind($"APS:{Options.APS?.Provider}", options))
                                     .AddCookie();
                             }
                         }
@@ -407,7 +386,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         })
                         .ConfigureApplicationPartManager(async apm =>
                         {
-                            await ConfigureApplicationParts(apm);
+                            await PluginManager.AddApplicationParts(apm);
                         })
                         .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
                         .AddDataAnnotationsLocalization(options =>
@@ -429,14 +408,16 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         })
                         .AddRazorRuntimeCompilation()
                         .AddXmlSerializerFormatters()
-                        .ConfigureApplicationPartManager(async apm => await ConfigureApplicationParts(apm))
+                        .ConfigureApplicationPartManager(async apm =>
+                        {
+                            await PluginManager.AddApplicationParts(apm);
+                        })
                         .AddNewtonsoftJson(options =>
                         {
                             options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                             options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                             options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
                             options.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.None;
-
                         })
                         .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
                         .AddDataAnnotationsLocalization(options =>
@@ -464,6 +445,10 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         });
                 }
                 #endregion
+
+
+                services.AddAllianceBusinessPlatformModular(Configuration, Environment, Options);
+
 
             }
             catch (Exception ex)
@@ -509,9 +494,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 // Pre-Routing Middleware
                 app.Use(async (context, next) =>
                 {
-                    var parameters = context.Request.RouteValues;
-                    var url = context.Request.Path.Value;
                     var host = context.Request.Host;
+                    var url = context.Request.Path.Value;
+                    var parameters = context.Request.RouteValues;
 
                     // Manage Headers
                     foreach (var Header in Options.ABP?.Http?.HttpHeaders)
@@ -579,7 +564,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
             if (Options.ABP?.Caching?.Enable ?? false)
             {
                 if (Options.ABP?.Caching?.ResponseCaching?.Enable ?? false)
+                {
                     app.UseResponseCaching();
+                }
             }
 
             if (Options.ABP?.StaticFiles?.Enable ?? false)
@@ -700,7 +687,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         }
 
                         if (Options.ABS?.ControllersWithViews == null)
+                        {
                             return;
+                        }
 
                         if (Options.ABS?.ControllersWithViews?.Endpoints?.AreaControllerRoutes != null)
                         {
@@ -711,7 +700,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         }
 
                         if (Options.ABS?.ControllersWithViews?.Endpoints?.ControllerRoutes == null)
+                        {
                             return;
+                        }
 
                         foreach (var controllerRoute in Options.ABS?.ControllersWithViews?.Endpoints?.ControllerRoutes)
                         {
@@ -725,226 +716,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 }
             }
 
+
+            app.UseAllianceBusinessPlatformModular(Configuration, Environment, Options);
+
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="apm"></param>
-        public static async Task<ApplicationPartManager> ConfigureApplicationParts(ApplicationPartManager apm)
-        {
-
-            var ModulesManifest = PluginManager.GetModulesManifest();
-
-            var entryAssembly = Assembly.GetEntryAssembly();
-
-
-            Console.WriteLine($"Trying to load plugins for entry assembly {entryAssembly.FullName} at path {ModulesFolder} ");
-
-            if (!Directory.Exists(ModulesFolder))
-            {
-                Directory.CreateDirectory(ModulesFolder);
-            }
-
-            await ExtractNugetPackages(Directory.GetFiles(ModulesFolder, "*.nupkg", SearchOption.AllDirectories).ToList());
-
-            var pluginFolders = Directory.GetDirectories(ModulesFolder);
-
-            foreach (var pluginFolder in pluginFolders)
-            {
-                Console.WriteLine($"Trying to load plugin at: {pluginFolder}.");
-                try
-                {
-                    apm = await ConfigureApplicationPart(pluginFolder, apm);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to load plugin at: {pluginFolders}. Error: {ex}.");
-                }
-            }
-
-            apm?.FeatureProviders.Add(new ViewComponentFeatureProvider());
-
-            
-            return apm;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="apm"></param>
-        public static async Task<ApplicationPartManager> ConfigureApplicationPart(string path, ApplicationPartManager apm = null, SuiteOptions Options = null)
-        {
-            if (Directory.Exists(path))
-            {
-                // Flow: 
-                // 1. Determine Form
-                //      1.1 Extract nuget packages
-                // 2. Prepare Plugin for consumption 
-                //      2.1 Deserialize plugin manifest
-                //      2.2 Check for trust configuration
-                //      2.3 Load entry assembly
-                // 3. Register plugin 
-                //      4.1 Add assemblies to plugin context
-                //      4.1 Place Static Assets where they belong
-                //      4.2 Register Application Parts
-                //      4.3 Register Application Features
-
-                var assemblyFiles = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-                if (assemblyFiles is null || !assemblyFiles.Any())
-                {
-                    Console.WriteLine($"No files where found in folder {assemblyFiles}");
-                }
-                else
-                {
-                    var NuSpecFile = assemblyFiles?.Where(c => c.ToLowerInvariant().EndsWith(".nuspec"))?.First();
-                    var DllFiles = assemblyFiles?.Where(c => c.ToLowerInvariant().EndsWith(".dll"))?.ToList();
-                    var CssFiles = assemblyFiles?.Where(c => c.ToLowerInvariant().EndsWith(".css"))?.ToList();
-                    var JsFiles = assemblyFiles?.Where(c => c.ToLowerInvariant().EndsWith(".js"))?.ToList();
-                    var HtmlFiles = assemblyFiles?.Where(c => c.ToLowerInvariant().EndsWith(".html"))?.ToList();
-                    var JsonFiles = assemblyFiles?.Where(c => c.ToLowerInvariant().EndsWith(".json"))?.ToList();
-
-
-                    var PluginSettings = new ACL.Configuration.Types.ABP.Modular.Module()
-                    {
-                        AssemblyPaths = new List<string>()
-                    };
-
-                    var pluginSpecSerializer = new XmlSerializer(typeof(Package));
-                    var pluginSpecFileStream = new FileStream(NuSpecFile, FileMode.Open);
-                    var pluginSpec = (Package)pluginSpecSerializer.Deserialize(pluginSpecFileStream);
-
-                    PluginSettings.NuSpecPath = NuSpecFile;
-                    PluginSettings.ID = pluginSpec.Metadata?.Id;
-                    PluginSettings.Name = pluginSpec.Metadata?.Title;
-                    PluginSettings.Version = pluginSpec.Metadata?.Version;
-                    PluginSettings.Manifest = JsonConvert.SerializeObject(pluginSpec);
-
-                    int DllErrors = 0;
-
-                    try
-                    {
-                        // Try to load Plugin DLLs
-                        foreach (var assemblyFile in DllFiles)
-                        {
-                            try
-                            {
-                                Console.WriteLine($"Parsing plugin file: {assemblyFile} ");
-                                Console.WriteLine($"Loading plugin assembly: {assemblyFile} ");
-
-                                // Assembly
-                                // In the.NET framework Assembly is the minimum unit of deployment and it is the form of an EXE or a DLL.
-                                //    - An assembly can contain one or more files, they can include things like resource files or modules(embedded).
-                                //    - An assembly always contains an assembly manifest.Assembly manifest is the metadata of an assembly. 
-                                //          It contains assembly definition identity, files in the assembly, type reference information and more.
-                                //    - The Assembly Linker(Al.exe) generates a file that has the assembly manifest in it.
-                                //    - You can view the topology of an assembly by using the IL Disassembler(ildasm.exe).
-
-                                // Modules
-                                // The code files in an assembly are called modules.
-                                //   - A module is a unit of compilation.
-                                //   - Module contains type metadata.
-                                //   - A module can not be deployed alone, it has to be linked into an assembly(using Al.exe).
-
-                                var assembly = Assembly.LoadFrom(assemblyFile);
-                                var managedAssembly = PluginManager.LoadPlugin(assemblyFile);
-
-                                var assemblyManifestResourceNames = assembly.GetManifestResourceNames();
-                                var assemblyReferencedAssemblies = assembly.GetReferencedAssemblies();
-                                var assemblyModules = assembly.GetModules(true);
-                                var assemblyTypes = assembly.GetTypes();
-                                var assemblyExportedTypes = assembly.GetExportedTypes();
-                                var assemblySecurityRuleSet = assembly.SecurityRuleSet;
-                                var assemblyReflectionOnly = assembly.ReflectionOnly;
-                                var assemblyExecutionOnly = !assembly.ReflectionOnly;
-                                var assemblyIsFullyTrusted = assembly.IsFullyTrusted;
-                                var assemblyIsDynamic = assembly.IsDynamic;
-                                var assemblyLocation = assembly.Location;
-                                var assemblyIsCollectible = assembly.IsCollectible;
-                                PluginSettings.AssemblyPaths.ToList().Add(assemblyLocation);
-
-
-                                Plugins.AddRange(PluginLoadContext.InstantiatePlugin(managedAssembly));
-
-                                if (PluginSettings.AssemblyPaths.All(c => c != assemblyLocation))
-                                {
-                                    PluginSettings.AssemblyPaths.ToList().Add(assemblyLocation);
-                                }
-
-                                if (!(apm is null))
-                                {
-                                    if (assemblyFile.EndsWith(".Views.dll"))
-                                    {
-                                        apm.ApplicationParts.Add(new CompiledRazorAssemblyPart(assembly));
-                                    }
-                                    else
-                                    {
-                                        apm.ApplicationParts.Add(new AssemblyPart(assembly));
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error($"There was an error while loading module assembly: {assemblyFile}. Error: {ex}.");
-                            }
-                        }
-
-                        PluginManager.AddModuleToManifest(PluginSettings);
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"Failed to Extract {DllErrors}/{DllFiles?.Count() ?? 0} nuget package at {path}");
-                    }
-
-
-                }
-            }
-            else
-            {
-                Console.WriteLine($"No folder could be found at path: {path}");
-            }
-
-            return apm;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="NugetPackagePaths"></param>
-        /// <returns></returns>
-        public static async Task ExtractNugetPackages(List<string> NugetPackagePaths)
-        {
-
-            int NugetPackageErrors = 0;
-
-            try
-            {
-                Console.WriteLine($"Trying to extract nuget plugin files at path: {ModulesFolder} ");
-
-                foreach (var nugetPackage in NugetPackagePaths)
-                {
-                    try
-                    {
-                        Console.WriteLine($"Trying to extract nuget package file: {nugetPackage} ");
-                        var newPath = Path.Join(Path.GetDirectoryName(nugetPackage), Path.GetFileNameWithoutExtension(nugetPackage));
-                        // TODO: Extract nuget package
-                        ZipFile.ExtractToDirectory(nugetPackage, newPath, true);
-
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"Failed to Extract nuget package at {nugetPackage}");
-                        NugetPackageErrors++;
-                    }
-                }
-            }
-            catch
-            {
-                Console.WriteLine($"Failed to Extract {NugetPackageErrors}/{NugetPackagePaths?.Count() ?? 0} nuget package at {ModulesFolder}");
-            }
-        }
-
-
     }
 }
