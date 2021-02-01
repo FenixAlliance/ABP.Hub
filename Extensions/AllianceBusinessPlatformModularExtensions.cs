@@ -7,7 +7,9 @@ using Microsoft.Extensions.Hosting;
 
 namespace FenixAlliance.ABP.Hub.Extensions
 {
-
+    /// <summary>
+    /// 
+    /// </summary>
     public static class AllianceBusinessPlatformModularExtensions
     {
         /// <summary>

@@ -45,9 +45,14 @@ namespace FenixAlliance.ABP.Hub.Plugins
         {
             IEnumerable<IModule> Modules = GetModulesManifest();
 
+
             foreach (var Module in Modules)
             {
-                Module.ConfigureServices(services, Configuration, Environment, Options);
+                var ModuleConfiguration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+
+                Module.ConfigureServices(services, ModuleConfiguration, Environment);
             }
 
             return services;
@@ -63,11 +68,20 @@ namespace FenixAlliance.ABP.Hub.Plugins
         /// <returns></returns>
         public static IApplicationBuilder UseModuleServices(IApplicationBuilder app, IConfiguration Configuration, IHostEnvironment Environment, ISuiteOptions Options)
         {
+            /*
+             * Flow:
+             *  1. We need to get the modules manifest.
+             */
+
             IEnumerable<IModule> Modules = GetModulesManifest();
 
             foreach (var Module in Modules)
             {
-                Module.Configure(app, Configuration, Environment, Options);
+                var ModuleConfiguration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+
+                Module.Configure(app, ModuleConfiguration, Environment);
             }
 
             return app;
@@ -79,11 +93,11 @@ namespace FenixAlliance.ABP.Hub.Plugins
         public static async Task<ApplicationPartManager> AddApplicationParts(ApplicationPartManager apm)
         {
             // Get the List of Modules registered
-            var ModulesManifest = PluginManager.GetModulesManifest();
+            var ModulesManifest = GetModulesManifest();
             // Get the entry assembly
             var entryAssembly = Assembly.GetEntryAssembly();
             // Logging intent.
-            Console.WriteLine($"Trying to load plugins for entry assembly {entryAssembly.FullName} at path {ModulesFolder} ");
+            Console.WriteLine($"Trying to load plugins for entry assembly {entryAssembly?.FullName} at path {ModulesFolder} ");
             // Extracting Nuget Packages available at the Modules Root Folder
             ExtractNugetPackages(Directory.GetFiles(ModulesFolder, "*.nupkg", SearchOption.AllDirectories).ToList());
             // Getting every folder inside the Modules Root Folder
@@ -116,9 +130,6 @@ namespace FenixAlliance.ABP.Hub.Plugins
         /// </summary>
         /// <param name="path"></param>
         /// <param name="apm"></param>
-        /// <param name="Configuration"></param>
-        /// <param name="Environment"></param>
-        /// <param name="Options"></param>
         /// <returns></returns>
         public static async Task<ApplicationPartManager> AddApplicationPart(ApplicationPartManager apm, string path)
         {
@@ -197,7 +208,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
 
                                 var assembly = Assembly.LoadFrom(assemblyFile);
 
-                                var managedAssembly = LoadPlugin(assemblyFile);
+                                var managedAssembly = PluginLoadContext.LoadPlugin(assemblyFile);
 
                                 var assemblyTypes = assembly.GetTypes();
                                 var assemblyLocation = assembly.Location;
@@ -298,19 +309,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
         }
 
 
-        /// <summary>
-        /// Loads the contents of an assembly file on the specified path.
-        /// </summary>
-        /// <param name="assemblyPath">The absolute path of the file to load.</param>
-        public static Assembly LoadPlugin(string assemblyPath)
-        {
-            // Logging attempt
-            Console.WriteLine($"Loading commands from: {assemblyPath}");
-            // New Plugin Load Context
-            var loadContext = new PluginLoadContext(assemblyPath);
-            // Return the loaded assembly
-            return loadContext.LoadFromAssemblyPath(assemblyPath);
-        }
+
 
         /// <summary>
         /// This method returns a List of Assemblies
@@ -541,7 +540,5 @@ namespace FenixAlliance.ABP.Hub.Plugins
                 Console.WriteLine($"Can't find any type which implements IModule in {assembly}. Check the list of available types: {availableTypes} .");
             }
         }
-
-
     }
 }

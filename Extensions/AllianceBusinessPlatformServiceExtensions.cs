@@ -72,7 +72,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
             try
             {
                 services.AddSingleton<ISuiteOptions>(Options);
-
+                //services.AddControllers();
                 #region Auth
 
                 if (Options.APS?.Enable ?? false)
@@ -95,7 +95,10 @@ namespace FenixAlliance.ABP.Hub.Extensions
                                     o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                                     o.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
                                 })
-                                .AddAzureAdB2C(options => Configuration.Bind($"APS:{Options.APS?.Provider}", options))
+                                .AddAzureAdB2C(options =>
+                                {
+                                    Configuration.Bind($"APS:{Options.APS?.Provider}", options);
+                                })
                                 //.AddAzureADB2CBearer(options => Configuration.Bind("AzureAdB2C", options))
                                 //.AddCertificate();
                                 .AddCookie();
@@ -109,7 +112,10 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             if (!Options.APS?.AzureADB2C?.DefaultProvider ?? false)
                             {
                                 services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-                                    .AddAzureAD(options => Configuration.Bind($"APS:{Options.APS?.Provider}", options))
+                                    .AddAzureAD(options =>
+                                    {
+                                        Configuration.Bind($"APS:{Options.APS?.Provider}", options);
+                                    })
                                     .AddCookie();
                             }
                         }
@@ -641,13 +647,27 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                             if (Options.ABP?.HealthChecks?.HealthChecksUi?.Enable ?? false)
                             {
-                                routes.MapHealthChecksUI(setup =>
+                                try
                                 {
-                                    foreach (var style in Options.ABP?.HealthChecks?.HealthChecksUi?.Styles)
+                                    routes.MapHealthChecksUI(setup =>
                                     {
-                                        setup.AddCustomStylesheet(style.Path);
-                                    }
-                                });
+                                        foreach (var style in Options.ABP?.HealthChecks?.HealthChecksUi?.Styles)
+                                        {
+                                            try
+                                            {
+                                                setup.AddCustomStylesheet(style.Path);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.WriteLine(e);
+                                            }
+                                        }
+                                    });
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
+                                }
                             }
                         }
 
@@ -658,10 +678,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                         if (Options.ABS?.Blazor?.Enable ?? false)
                         {
-                            // if (Options.ABS?.Blazor?.BlazorHub. ?? false)
-                            //{
                             routes.MapBlazorHub();
-                            //}
                         }
 
                         if (Options.ABS?.Blazor != null && (Options.ABS?.Blazor.Enable ?? false))

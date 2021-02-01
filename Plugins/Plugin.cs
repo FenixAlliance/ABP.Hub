@@ -10,12 +10,12 @@ namespace FenixAlliance.ABP.Hub.Plugins
 {
     public class Plugin : Module
     {
-        public override int ConfigureServices(IServiceCollection services, IConfiguration Configuration, IHostEnvironment Environment, ISuiteOptions Options)
+        public override int ConfigureServices(IServiceCollection services, IConfiguration Configuration, IHostEnvironment Environment)
         {
             throw new NotImplementedException();
         }
 
-        public override int Configure(IApplicationBuilder app, IConfiguration Configuration, IHostEnvironment Environment, ISuiteOptions Options)
+        public override int Configure(IApplicationBuilder app, IConfiguration Configuration, IHostEnvironment Environment)
         {
             throw new NotImplementedException();
         }

@@ -37,6 +37,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
 
             return null;
         }
+
         /// <summary>
         /// Load Managed Assembly from AssemblyPath
         /// </summary>
@@ -64,6 +65,18 @@ namespace FenixAlliance.ABP.Hub.Plugins
             return IntPtr.Zero;
         }
 
-
+        /// <summary>
+        /// Loads the contents of an assembly file on the specified path.
+        /// </summary>
+        /// <param name="assemblyPath">The absolute path of the file to load.</param>
+        public static Assembly LoadPlugin(string assemblyPath)
+        {
+            // Logging attempt
+            Console.WriteLine($"Loading commands from: {assemblyPath}");
+            // New Plugin Load Context
+            var loadContext = new PluginLoadContext(assemblyPath);
+            // Return the loaded assembly
+            return loadContext.LoadFromAssemblyPath(assemblyPath);
+        }
     }
 }
