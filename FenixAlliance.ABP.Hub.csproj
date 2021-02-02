@@ -117,6 +117,5 @@
     <ProjectReference Include="..\FenixAlliance.ABP.BotEngine\FenixAlliance.ABP.BotEngine.Core\FenixAlliance.ABP.BotEngine.Core.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.HealthChecks\FenixAlliance.ABP.HealthChecks.Core\FenixAlliance.ABP.HealthChecks.Core.csproj" />
     <ProjectReference Include="..\FenixAlliance.ABP.SignalR\FenixAlliance.ABP.SignalR.csproj" />
-    <ProjectReference Include="..\FenixAlliance.ABP.i18n\FenixAlliance.ABP.i18n.csproj" />
   </ItemGroup>
 </Project>

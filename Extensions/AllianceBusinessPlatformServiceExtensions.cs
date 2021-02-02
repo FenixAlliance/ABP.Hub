@@ -11,7 +11,7 @@ using FenixAlliance.ABP.API.REST.Core.Extensions;
 using FenixAlliance.ABP.BotEngine.Core.Extensions;
 using FenixAlliance.ABP.HealthChecks.Core.Extensions;
 using FenixAlliance.ABP.Hub.Plugins;
-using FenixAlliance.ABP.i18n.Resources;
+using FenixAlliance.ACL.i18n.Resources;
 using FenixAlliance.ABP.SignalR;
 using FenixAlliance.ACL.Configuration.Interfaces;
 using FenixAlliance.ACL.Configuration.Types.ABS.SPAs;
