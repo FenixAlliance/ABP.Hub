@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using AspNetCoreRateLimit;
 using AutoMapper;
 using FenixAlliance.ABM.Hub.Extensions;
@@ -41,11 +42,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
     public static class AllianceBusinessPlatformServiceExtensions
     {
         /// <summary>
-        ///
-        /// </summary>
-        static string CorsPolicy = "AllowAllOrigins";
-
-        /// <summary>
         /// Supported Languages
         /// </summary>
         static string DefaultCulture = "en-US";
@@ -60,7 +56,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
         };
 
         /// <summary>
-        /// 
+        /// Adds required services to enable the Alliance Business Platform Layer for the Alliance Bussiness Suite.
         /// </summary>
         /// <param name="services"></param>
         /// <param name="Configuration"></param>
@@ -77,49 +73,10 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 if (Options.APS?.Enable ?? false)
                 {
-                    // Adds Azure AD B2C Authentication
-                    //services.AddAlliancePassportServices(Configuration, Environment, Options);
 
                     #region Auth
-
-                    if (Options.APS?.Enable ?? false)
-                    {
-
-                        if (Options.APS?.AzureADB2C?.DefaultProvider ?? false)
-                        {
-                            if (!Options.APS?.AzureAd.DefaultProvider ?? false)
-                            {
-                                // Adds Azure AD B2C Authentication
-                                services.AddAuthentication(o =>
-                                {
-                                    o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                                    o.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-                                })
-                                .AddAzureAdB2C(options =>
-                                {
-                                    Configuration.Bind($"APS:{Options.APS?.Provider}", options);
-                                })
-                                //.AddAzureADB2CBearer(options => Configuration.Bind("AzureAdB2C", options))
-                                //.AddCertificate();
-                                .AddCookie();
-
-                                services.AddAuthorization();
-                            }
-                        }
-
-                        if (Options.APS?.AzureAd.DefaultProvider ?? false)
-                        {
-                            if (!Options.APS?.AzureADB2C?.DefaultProvider ?? false)
-                            {
-                                services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-                                    .AddAzureAD(options =>
-                                    {
-                                        Configuration.Bind($"APS:{Options.APS?.Provider}", options);
-                                    })
-                                    .AddCookie();
-                            }
-                        }
-                    }
+                    // Adds Azure AD B2C Authentication
+                    services.AddAlliancePassportServices(Configuration, Environment, Options);
                     #endregion
 
                     #region GDPR
@@ -171,15 +128,34 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 if (Options.ABP?.Cors?.Enable ?? false)
                 {
-                    // Add CORS Policies
-                    services.AddCors(options =>
+
+                    if (Options.ABP?.Cors?.Policies == null || !(Options.ABP?.Cors?.Policies).Any())
                     {
-                        options.AddPolicy(name: CorsPolicy,
-                            builder =>
-                            {
-                                builder.WithOrigins("http://suite.fenixalliance.com.co", "http://fenixalliance.com.co");
-                            });
-                    });
+                        // Adds cross-origin resource sharing services.
+                        services.AddCors();
+                    }
+                    else
+                    {
+                        // Add CORS Policies
+                        services.AddCors(options =>
+                        {
+                                foreach (var corsPolicy in Options.ABP?.Cors?.Policies)
+                                {
+                                    options.AddPolicy(name: corsPolicy.Name,
+                                        builder =>
+                                        {
+                                            var allowedOrigins = new List<string>();
+
+                                                allowedOrigins.AddRange(corsPolicy.AllowedOrigins);
+
+                                            if (allowedOrigins.Count != 0)
+                                            {
+                                                builder.WithOrigins(allowedOrigins.ToArray());
+                                            }
+                                        });
+                                }
+                        });
+                    }
                 }
 
                 #endregion
@@ -361,6 +337,8 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
                 #endregion
 
+
+
                 #region MVC
 
                 if (Options.ABS?.ControllersWithViews?.Enable ?? false)
@@ -398,7 +376,8 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         .AddDataAnnotationsLocalization(options =>
                         {
                             options.DataAnnotationLocalizerProvider = (type, factory) => factory.Create(typeof(SharedResources));
-                        });
+                        })
+                        .AddControllersAsServices();
                 }
                 #endregion
 
@@ -452,8 +431,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 }
                 #endregion
 
-
+                #region Modular
                 services.AddAllianceBusinessPlatformModular(Configuration, Environment, Options);
+                #endregion
 
 
             }
@@ -464,7 +444,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
         }
 
         /// <summary>
-        /// 
+        /// Use required services to enable the Alliance Business Platform Layer for the Alliance Bussiness Suite.
         /// </summary>
         /// <param name="app"></param>
         /// <param name="Configuration"></param>
@@ -554,7 +534,33 @@ namespace FenixAlliance.ABP.Hub.Extensions
             // UseCors must be called before UseResponseCaching when using UseResponseCaching.
             if (Options.ABP?.Cors?.Enable ?? false)
             {
-                app.UseCors(CorsPolicy);
+                if (Options.ABP?.Cors?.Policies == null || !(Options.ABP?.Cors?.Policies).Any())
+                {
+                    // Adds cross-origin resource sharing services.
+                    app.UseCors();
+                }
+                else
+                {
+                    // Add CORS Policies
+                    foreach (var corsPolicy in Options.ABP?.Cors?.Policies)
+                    {
+                        // TODO: Determine if this should use just the name as policy has been registered at services.AddCors(). If affirmative: app.UseCors(corsPolicy.Name); 
+                        app.UseCors(policy =>
+                        {
+                            // TODO: Finish CORS configuration. Requires ACL modification
+
+                            if (corsPolicy.AllowAnyHeader)
+                                policy.AllowAnyHeader();
+
+                            if (corsPolicy.AllowAnyMethod)
+                                policy.AllowAnyMethod();
+
+                            if (corsPolicy.AllowCredentials)
+                                policy.AllowCredentials();
+
+                        });
+                    }
+                }
             }
 
             if (Options.ABP?.Routing?.Enable ?? false)
@@ -733,8 +739,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 }
             }
 
-
+            #region Modular
             app.UseAllianceBusinessPlatformModular(Configuration, Environment, Options);
+            #endregion 
 
         }
     }
