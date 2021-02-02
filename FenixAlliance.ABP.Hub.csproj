@@ -108,6 +108,9 @@
     <RepositoryUrl>https://github.com/FenixAlliance/ABP.Hub</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Extensions\AllianceBusinessPlatformServiceExtensions.cs~RFfc0e032.TMP" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Icon.png" Pack="True" PackagePath="" />
     <None Include="LICENSE.md" Pack="True" PackagePath="" />
   </ItemGroup>
