@@ -375,8 +375,8 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         .AddDataAnnotationsLocalization(options =>
                         {
                             options.DataAnnotationLocalizerProvider = (type, factory) => factory.Create(typeof(SharedResources));
-                        })
-                        .AddControllersAsServices();
+                        });
+                        //.AddControllersAsServices();
                 }
                 #endregion
 
