@@ -353,7 +353,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             options.InputFormatters.Add(new XmlSerializerInputFormatter(options));
                             options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
                         })
-                        .AddRazorRuntimeCompilation()
                         .AddXmlSerializerFormatters()
                         .AddXmlDataContractSerializerFormatters()
                         .AddJsonOptions(c =>
@@ -391,7 +390,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         {
 
                         })
-                        .AddRazorRuntimeCompilation()
                         .AddXmlSerializerFormatters()
                         .ConfigureApplicationPartManager(async apm =>
                         {
