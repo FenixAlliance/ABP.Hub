@@ -141,18 +141,21 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         {
                                 foreach (var corsPolicy in Options.ABP?.Cors?.Policies)
                                 {
-                                    options.AddPolicy(name: corsPolicy.Name,
-                                        builder =>
-                                        {
-                                            var allowedOrigins = new List<string>();
+                                    if(!String.IsNullOrEmpty(corsPolicy.Name) && !String.IsNullOrWhiteSpace(corsPolicy.Name) ){
 
-                                                allowedOrigins.AddRange(corsPolicy.AllowedOrigins);
-
-                                            if (allowedOrigins.Count != 0)
+                                        options.AddPolicy(name: corsPolicy.Name,
+                                            builder =>
                                             {
-                                                builder.WithOrigins(allowedOrigins.ToArray());
-                                            }
-                                        });
+                                                var allowedOrigins = new List<string>();
+
+                                                    allowedOrigins.AddRange(corsPolicy.AllowedOrigins);
+
+                                                if (allowedOrigins.Count != 0)
+                                                {
+                                                    builder.WithOrigins(allowedOrigins.ToArray());
+                                                }
+                                            });
+                                    }
                                 }
                         });
                     }
