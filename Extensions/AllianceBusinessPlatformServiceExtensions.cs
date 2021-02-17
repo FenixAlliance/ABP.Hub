@@ -67,8 +67,17 @@ namespace FenixAlliance.ABP.Hub.Extensions
         {
             try
             {
-                services.AddSingleton<ISuiteOptions>(Options);
-                //services.AddControllers();
+                services.AddSingleton(Options);
+
+                #region Data
+
+                if (Options.ABM?.Enable ?? false)
+                {
+                    services.AddAllianceBusinessModelServices(Configuration, Environment, Options);
+                }
+
+                #endregion
+
                 #region Auth
 
                 if (Options.APS?.Enable ?? false)
@@ -97,14 +106,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #endregion
 
-                #region Data
 
-                if (Options.ABM?.Enable ?? false)
-                {
-                    services.AddAllianceBusinessModelServices(Configuration, Environment, Options);
-                }
-
-                #endregion
 
                 #region REST
 
@@ -339,8 +341,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 #region AutoMapper
                 services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
                 #endregion
-
-
 
                 #region MVC
 
