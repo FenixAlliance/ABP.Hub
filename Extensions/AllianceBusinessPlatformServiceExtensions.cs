@@ -35,6 +35,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using reCAPTCHA.AspNetCore;
 using Serilog;
+using FenixAlliance.ACL.Configuration.Types;
 
 namespace FenixAlliance.ABP.Hub.Extensions
 {
@@ -67,6 +68,9 @@ namespace FenixAlliance.ABP.Hub.Extensions
         {
             try
             {
+                if (Options == null)
+                    Options = SuiteOptions.DeserializeOptionsFromFileStatic();
+
                 services.AddSingleton(Options);
 
                 #region Data
@@ -458,7 +462,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
             // Enable Sensitive Exceptions on dev
             if (Environment.IsDevelopment())
             {
-                app.UseDatabaseErrorPage();
                 app.UseDeveloperExceptionPage();
                 app.UseBrowserLink();
             }
