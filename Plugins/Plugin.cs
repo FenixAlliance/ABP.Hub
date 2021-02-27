@@ -1,10 +1,9 @@
-﻿using System;
-using FenixAlliance.ACL.Configuration.Interfaces;
-using FenixAlliance.ACL.Configuration.Types.ABP.Modular;
+﻿using FenixAlliance.ACL.Configuration.Types.ABP.Modular;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace FenixAlliance.ABP.Hub.Plugins
 {

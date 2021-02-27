@@ -1,10 +1,10 @@
-﻿using System;
-using System.Reflection;
-using System.Runtime.Loader;
-using FenixAlliance.ACL.Configuration.Interfaces;
+﻿using FenixAlliance.ACL.Configuration.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
 
 namespace FenixAlliance.ABP.Hub.Plugins
 {
@@ -20,7 +20,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
         {
             _resolver = new AssemblyDependencyResolver(pluginPath);
         }
-        
+
         /// <summary>
         /// Load Managed Assembly from AssemblyName
         /// </summary>

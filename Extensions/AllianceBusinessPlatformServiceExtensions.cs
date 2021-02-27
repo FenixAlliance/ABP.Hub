@@ -1,25 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
 using AspNetCoreRateLimit;
-using AutoMapper;
 using FenixAlliance.ABM.Hub.Extensions;
 using FenixAlliance.ABP.API.GraphQl.Core.Extensions;
 using FenixAlliance.ABP.API.REST.Core.Extensions;
 using FenixAlliance.ABP.BotEngine.Core.Extensions;
 using FenixAlliance.ABP.HealthChecks.Core.Extensions;
 using FenixAlliance.ABP.Hub.Plugins;
-using FenixAlliance.ACL.i18n.Resources;
 using FenixAlliance.ABP.SignalR;
 using FenixAlliance.ACL.Configuration.Interfaces;
+using FenixAlliance.ACL.Configuration.Types;
 using FenixAlliance.ACL.Configuration.Types.ABS.SPAs;
+using FenixAlliance.ACL.i18n.Resources;
 using FenixAlliance.APS.Core.Extensions;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.AzureAD.UI;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Localization;
@@ -35,7 +26,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using reCAPTCHA.AspNetCore;
 using Serilog;
-using FenixAlliance.ACL.Configuration.Types;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 
 namespace FenixAlliance.ABP.Hub.Extensions
 {
@@ -145,24 +140,25 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         // Add CORS Policies
                         services.AddCors(options =>
                         {
-                                foreach (var corsPolicy in Options.ABP?.Cors?.Policies)
+                            foreach (var corsPolicy in Options.ABP?.Cors?.Policies)
+                            {
+                                if (!String.IsNullOrEmpty(corsPolicy.Name) && !String.IsNullOrWhiteSpace(corsPolicy.Name))
                                 {
-                                    if(!String.IsNullOrEmpty(corsPolicy.Name) && !String.IsNullOrWhiteSpace(corsPolicy.Name) ){
 
-                                        options.AddPolicy(name: corsPolicy.Name,
-                                            builder =>
+                                    options.AddPolicy(name: corsPolicy.Name,
+                                        builder =>
+                                        {
+                                            var allowedOrigins = new List<string>();
+
+                                            allowedOrigins.AddRange(corsPolicy.AllowedOrigins);
+
+                                            if (allowedOrigins.Count != 0)
                                             {
-                                                var allowedOrigins = new List<string>();
-
-                                                    allowedOrigins.AddRange(corsPolicy.AllowedOrigins);
-
-                                                if (allowedOrigins.Count != 0)
-                                                {
-                                                    builder.WithOrigins(allowedOrigins.ToArray());
-                                                }
-                                            });
-                                    }
+                                                builder.WithOrigins(allowedOrigins.ToArray());
+                                            }
+                                        });
                                 }
+                            }
                         });
                     }
                 }
@@ -383,7 +379,7 @@ namespace FenixAlliance.ABP.Hub.Extensions
                         {
                             options.DataAnnotationLocalizerProvider = (type, factory) => factory.Create(typeof(SharedResources));
                         });
-                        //.AddControllersAsServices();
+                    //.AddControllersAsServices();
                 }
                 #endregion
 

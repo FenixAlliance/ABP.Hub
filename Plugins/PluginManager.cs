@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using FenixAlliance.ABP.Hub.Plugins.Specifications;
+﻿using FenixAlliance.ABP.Hub.Plugins.Specifications;
 using FenixAlliance.ACL.Configuration.Interfaces;
 using FenixAlliance.ACL.Configuration.Interfaces.ABP.Modular;
 using Microsoft.AspNetCore.Builder;
@@ -17,6 +9,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Serilog;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace FenixAlliance.ABP.Hub.Plugins
 {
@@ -333,7 +333,8 @@ namespace FenixAlliance.ABP.Hub.Plugins
             foreach (var module in ModulesManifest)
             {
                 // Iterate through each assembly for this module and try to load.
-                foreach (var assemblyPath in module.AssemblyPaths) { 
+                foreach (var assemblyPath in module.AssemblyPaths)
+                {
                     // Try to load the assembly
                     try
                     {
@@ -424,10 +425,10 @@ namespace FenixAlliance.ABP.Hub.Plugins
             // Get the current Modules Manifest a a list of invokable Modules
             var currentManifest = GetModulesManifest();
             // If the manifest does not contain an extension whose id is the same as the id of the module we're attempting to register
-            if (!currentManifest.Exists(c => c?.ID == Extension?.ID ))
+            if (!currentManifest.Exists(c => c?.ID == Extension?.ID))
             {
                 // If no module with the same id and the same version is present
-                if(!currentManifest.Exists(c => c?.ID == Extension?.ID && c?.Version == Extension?.Version))
+                if (!currentManifest.Exists(c => c?.ID == Extension?.ID && c?.Version == Extension?.Version))
                 {
                     // Let's add it to our Modules MAnifest
                     currentManifest.Add(Extension);
@@ -492,7 +493,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
         {
 
             var rootPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            
+
             var modulesPath = Path.Combine(rootPath, "Modules");
 
             if (Directory.Exists(Path.Join(modulesPath, moduleName)))
@@ -521,7 +522,7 @@ namespace FenixAlliance.ABP.Hub.Plugins
             {
                 if (typeof(Module).IsAssignableFrom(type))
                 {
-                    
+
                     ACL.Configuration.Types.ABP.Modular.Module result = Activator.CreateInstance(type) as ACL.Configuration.Types.ABP.Modular.Module;
 
                     if (result != null)
