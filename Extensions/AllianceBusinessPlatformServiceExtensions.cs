@@ -105,8 +105,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 #endregion
 
-
-
                 #region REST
 
                 if (Options.ABP?.Apis?.RestApi?.Enable ?? false)
@@ -169,6 +167,8 @@ namespace FenixAlliance.ABP.Hub.Extensions
 
                 if (Options.ABP?.Http?.Enable ?? false)
                 {
+                    services.AddHttpClient();
+
                     if (Options.ABP?.Http?.Enable ?? false)
                     {
                         // Set Base Path to /wwwroot
@@ -435,7 +435,6 @@ namespace FenixAlliance.ABP.Hub.Extensions
                 #region Modular
                 services.AddAllianceBusinessPlatformModular(Configuration, Environment, Options);
                 #endregion
-
 
             }
             catch (Exception ex)
@@ -714,6 +713,11 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             return;
                         }
 
+                        if (Options.ABS?.ControllersWithViews?.Endpoints?.ControllerRoutes == null)
+                        {
+                            return;
+                        }
+
                         if (Options.ABS?.ControllersWithViews?.Endpoints?.AreaControllerRoutes != null)
                         {
                             foreach (var area in Options.ABS?.ControllersWithViews?.Endpoints?.AreaControllerRoutes)
@@ -722,15 +726,11 @@ namespace FenixAlliance.ABP.Hub.Extensions
                             }
                         }
 
-                        if (Options.ABS?.ControllersWithViews?.Endpoints?.ControllerRoutes == null)
-                        {
-                            return;
-                        }
-
                         foreach (var controllerRoute in Options.ABS?.ControllersWithViews?.Endpoints?.ControllerRoutes)
                         {
                             routes.MapControllerRoute(controllerRoute.Name, controllerRoute.Pattern);
                         }
+
                     });
                 }
                 catch (Exception ex)
